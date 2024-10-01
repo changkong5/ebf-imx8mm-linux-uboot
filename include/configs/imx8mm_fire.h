@@ -51,7 +51,10 @@
 
 #endif
 
-#define CONFIG_CMD_READ
+#ifndef CONFIG_CMD_READ
+#define CONFIG_CMD_READ		1
+#endif
+
 #define CONFIG_SERIAL_TAG
 #define CONFIG_FASTBOOT_USB_DEV 0
 
@@ -288,7 +291,11 @@
 
 /* USB configs */
 #ifndef CONFIG_SPL_BUILD
-#define CONFIG_CMD_USB
+
+#ifndef CONFIG_CMD_USB
+#define CONFIG_CMD_USB 		1
+#endif
+
 #define CONFIG_USB_STORAGE
 #define CONFIG_USBD_HS
 
