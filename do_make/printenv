@@ -1,0 +1,101 @@
+
+
+
+
+
+Hit any key to stop autoboot:  0 
+switch to partitions #0, OK
+mmc2(part 0) is current device
+loading [mmc 2:1] /uEnv.txt ...
+2914 bytes read in 9 ms (315.4 KiB/s)
+Importing environment from mmc ...
+loading freescale/imx8mm-ebf-basic.dtb ...
+45496 bytes read in 28 ms (1.5 MiB/s)
+loading vmlinuz-5.4.47-imx8mm ...
+31908352 bytes read in 116 ms (262.3 MiB/s)
+debug: [console=ttymxc1 root=/dev/mmcblk2p2 rw rootfstype=ext4 rootwait coherent_pool=1M net.ifnames=0 vt.global_cursor_default=0] ...
+debug: [booti] ...
+## Flattened Device Tree blob at 43000000
+
+
+
+
+boot=${devtype} dev ${mmcdev};mmc rescan; echo loading [${devtype} ${bootpart}] /uEnv.txt ...; if run loaduEnv; then run importbootenv;setenv 
+
+bootcmd_mmc1=setenv devtype mmc; setenv mmcdev 1; setenv bootpart 1:1 ; setenv rootfpart 1:2 ; run boot
+bootcmd_mmc2=setenv devtype mmc; setenv mmcdev 2; setenv bootpart 2:1 ; setenv rootfpart 2:2 ; run boot
+
+
+loaduEnv=fatload ${devtype} ${bootpart} ${loadaddr} /uEnv.txt;
+
+loadaddr=0x40480000
+
+importbootenv=echo Importing environment from ${devtype} ...; env import -t ${loadaddr} ${filesize}
+
+
+storage_media init=/opt/scripts/tools/eMM;
+boot_a_script=load ${devtype} ${devnum}:${distro_bootpart} ${scriptaddr} ${prefix}${script}; source ${scriptaddr}
+boot_efi_binary=if fdt addr ${fdt_addr_r}; then bootefi bootmgr ${fdt_addr_r};else bootefi bootmgr ${fdtcontroladdr};fi;load ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} ei
+boot_extlinux=sysboot ${devtype} ${devnum}:${distro_bootpart} any ${scriptaddr} ${prefix}${boot_syslinux_conf}
+boot_fit=no
+boot_net_usb_start=usb start
+boot_prefixes=/ /boot/
+boot_script_dhcp=boot.scr.uimg
+boot_scripts=boot.scr.uimg boot.scr
+boot_syslinux_conf=extlinux/extlinux.conf
+boot_targets=mmc2
+bootcmd=run distro_bootcmd
+bootcmd_mfg=run mfgtool_args;if iminfo ${initrd_addr}; then if test ${tee} = yes; then bootm ${tee_addr} ${initrd_addr} ${fdt_addr}; else booti ${loadaddr} ${initrd_addr} ${fdt_addr};;
+bootcmd_mmc1=setenv devtype mmc; setenv mmcdev 1; setenv bootpart 1:1 ; setenv rootfpart 1:2 ; run boot
+bootcmd_mmc2=setenv devtype mmc; setenv mmcdev 2; setenv bootpart 2:1 ; setenv rootfpart 2:2 ; run boot
+
+
+
+u-boot=> printenv boot
+boot=${devtype} dev ${mmcdev};mmc rescan; echo loading [${devtype} ${bootpart}] /uEnv.txt ...; if run loaduEnv; then run importbootenv;setenv storage_media init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh;if test -n ${flash_firmware}; then echo setting flash firmware...;setenv flashtype ${storage_media};fi;run args_mmc_old;echo loading ${mmc_dtb} ...; ext4load ${devtype} ${rootfpart} 0x43000000 /usr/lib/linux-image-${uname_r}/${mmc_dtb};dtfile 0x43000000 0x43200000  /uEnv.txt ${loadaddr};echo loading vmlinuz-${uname_r} ...; fatload ${devtype} ${bootpart} 0x40480000 /kernel/vmlinuz-${uname_r};echo debug: [${bootargs}] ... ;echo debug: [booti] ...  ;booti 0x40480000 - 0x43000000;fi;
+
+mmc_dtb=freescale/imx8mm-ebf-basic.dtb
+uname_r=5.4.47-imx8mm
+
+loadaddr=0x40480000
+
+ext4load ${devtype} ${rootfpart} 0x43000000 /usr/lib/linux-image-${uname_r}/${mmc_dtb};
+
+dtfile 0x43000000 0x43200000  /uEnv.txt ${loadaddr};
+
+echo loading vmlinuz-${uname_r} ...; 
+
+fatload ${devtype} ${bootpart} 0x40480000 /kernel/vmlinuz-${uname_r};
+
+echo debug: [${bootargs}] ... ;
+
+echo debug: [booti] ...  ;
+
+booti 0x40480000 - 0x43000000;
+
+fi;
+
+
+ext4load ${devtype} ${rootfpart} 0x43000000 /usr/lib/linux-image-${uname_r}/${mmc_dtb};
+
+dtfile 0x43000000 0x43200000  /uEnv.txt ${loadaddr};
+
+fatload ${devtype} ${bootpart} 0x40480000 /kernel/vmlinuz-${uname_r};
+
+booti 0x40480000 - 0x43000000;
+
+
+static char dtfile_help_text[] =
+	"dtfile <dt addr> <overlays addr> <config name> <config addr>  - load the uEnv.txt to <fileaddr>\n";
+
+U_BOOT_CMD(
+	dtfile,	255,	0,	do_dtfile,
+	"dtoverlay utility commands", dtfile_help_text
+);
+
+
+
+
+
+
+

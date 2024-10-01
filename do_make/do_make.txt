@@ -1,0 +1,316 @@
+
+
+0> make distclean
+
+1> make imx8mm_fire_mmc_defconfig
+
+2> make menuconfig
+
+3> make ATF_LOAD_ADDR=0x920000 flash.bin -j12
+
+
+
+make -j8
+
+
+imx8mm_ddr4_evk_defconfig
+imx8mm_ddr4_evk_nand_defconfig
+
+
+imx8mm_fire_mmc_defconfig
+
+
+
+
+    25   Build U-Boot
+    26   ============
+    27   $ export CROSS_COMPILE=aarch64-poky-linux-
+    28   $ make imx8mm_fire_mmc_defconfig
+    29   $ export ATF_LOAD_ADDR=0x920000
+    30   $ make flash.bin
+
+
+
+
+
+U-Boot for the NXP i.MX8MM EVK board
+
+Quick Start
+===========
+- Build the ARM Trusted firmware binary
+- Get ddr firmware
+- Build U-Boot
+- Boot
+
+Get and Build the ARM Trusted firmware
+======================================
+Note: builddir is U-Boot build directory (source directory for in-tree builds)
+Get ATF from: https://source.codeaurora.org/external/imx/imx-atf
+branch: imx_4.19.35_1.0.0
+$ make PLAT=imx8mm bl31
+$ cp build/imx8mm/release/bl31.bin $(builddir)
+
+Get the ddr firmware
+=============================
+$ wget https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-imx-8.0.bin
+$ chmod +x firmware-imx-8.0.bin
+$ ./firmware-imx-8.0
+$ cp firmware-imx-8.0/firmware/ddr/synopsys/lpddr4*.bin $(builddir)
+
+Build U-Boot
+============
+$ export CROSS_COMPILE=aarch64-poky-linux-
+$ make imx8mm_evk_defconfig
+$ export ATF_LOAD_ADDR=0x920000
+$ make flash.bin
+
+Burn the flash.bin to MicroSD card offset 33KB
+$sudo dd if=flash.bin of=/dev/sd[x] bs=1024 seek=33
+
+Boot
+====
+Set Boot switch to SD boot
+
+
+
+
+1> cd /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/uboot
+
+2> cp /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/imx-atf/build/imx8mm/release/bl31.bin .
+
+3> cp /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/firmware-imx-8.10/firmware-imx-8.1/firmware/ddr/synopsys/ddr4_dmem_1d.bin .
+   cp /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/firmware-imx-8.10/firmware-imx-8.1/firmware/ddr/synopsys/ddr4_dmem_2d.bin .
+   cp /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/firmware-imx-8.10/firmware-imx-8.1/firmware/ddr/synopsys/ddr4_imem_1d.bin .
+   cp /home/lsb/Desktop/Desktop/linux-utils-tools/i.MX-8MM/firmware-imx-8.10/firmware-imx-8.1/firmware/ddr/synopsys/ddr4_imem_2d.bin .
+
+
+4> make imx8mm_topeet_defconfig
+
+5> make menuconfig
+
+6> make ATF_LOAD_ADDR=0x920000 flash.bin -j12
+
+
+
+setenv bootcmd 'tftp 0x40480000 192.168.3.2:ebf-imx8mm/ebf-image-builder/ebf_linux_kernel/arch/arm64/boot/Image;tftp 0x43000000 192.168.3.2:ebf-imx8mm/ebf-image-builder/ebf_linux_kernel/arch/arm64/boot/dts/freescale/imx8mm-ebf-basic.dtb;booti 0x40480000 - 0x43000000'
+setenv bootargs 'noinitrd console=ttymxc1,115200 root=/dev/mmcblk1p5 rw rootfstype=ext4 rootwait'
+setenv bootargs 'noinitrd console=ttymxc1,115200 root=/dev/mmcblk1p6 rw rootfstype=ext4 rootwait'
+
+
+setenv bootcmd 'mmc dev 1;read mmc 1:3 0x43000000 0x0 0x1000;read mmc 1:4 0x40480000 0x0 0x10000;booti 0x40480000 - 0x43000000'
+
+setenv bootcmd 'mmc dev 1;mmc read 0x43000000 0x00003000 0x00001000;mmc read 0x40480000 0x00004000 0x00010000;booti 0x40480000 - 0x43000000'
+
+
+
+
+
+
+
+tftp 0x40480000 192.168.3.2:ebf-imx8mm/ebf-image-builder/ebf_linux_kernel/arch/arm64/boot/Image
+tftp 0x43000000 192.168.3.2:ebf-imx8mm/ebf-image-builder/ebf_linux_kernel/arch/arm64/boot/dts/freescale/imx8mm-ebf-basic.dtb
+booti 0x40480000 - 0x43000000
+
+
+
+
+
+tftp 0x43000000 192.168.3.2:freescale/imx8mm-evk-root.dtb
+tftp 0x43000000 192.168.3.2:freescale/imx8mm-ebf-basic.dtb
+
+tftp 0x43000000 192.168.3.2:base.dtb
+
+tftp 0x43000000 192.168.3.2:ebf-imx8mm/ebf-image-builder/ebf_linux_kernel/arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
+
+ext4load ${devtype} ${rootfpart} 0x43000000 /usr/lib/linux-image-${uname_r}/${mmc_dtb};
+dtfile 0x43000000 0x43200000  /uEnv.txt ${loadaddr};
+fatload ${devtype} ${bootpart} 0x40480000 /kernel/vmlinuz-${uname_r};
+booti 0x40480000 - 0x43000000;
+
+bootcmd=run distro_bootcmd
+
+mmcblk1p6
+mmcblk2p1
+
+// debian
+busybox mount -t nfs -o nolock 192.168.3.2:/home/lsb/Desktop /mnt
+
+mount -t nfs -o nolock 192.168.3.2:/home/lsb/Desktop /mnt
+
+
+2> dtc -I fs /proc/device-tree
+
+2> dtc -I fs -O dtb -o /mnt/base.dtb /proc/device-tree
+
+2> dtc -I fs -O dts -o /mnt/base.dts /proc/device-tree
+
+dtc -I dtb -O dts -o zynqmp-zcu102.dts zynqmp-zcu102.dtb
+
+#dtc -I dts -O dtb -o ./devicetree-gen.dtb ./devicetree.dts
+#dtc -I dtb -O dts -o ./devicetree-gen.dts ./devicetree.dtb
+
+
+dtc -I dtb -O dts -o ./imx8mm-evk-root.dts ./imx8mm-evk-root.dtb
+dtc -I dtb -O dts -o ./imx8mm-ebf-basic.dts ./imx8mm-ebf-basic.dtb
+
+
+Kernel command line: console=ttymxc1 root=/dev/mmcblk2p2 rw rootfstype=ext4 rootwait coherent_pool=1M net.ifnames=0 vt.global_cursor_default=0
+
+setenv bootargs 'noinitrd console=ttymxc1,115200 root=/dev/mmcblk1p5 rw rootfstype=ext4 rootwait'
+
+
+setenv bootargs 'noinitrd console=ttymxc1,115200 root=/dev/mmcblk1p6 rw rootfstype=ext4 rootwait coherent_pool=1M net.ifnames=0 vt.global_cursor_default=0'
+
+
+sudo dd if=flash.bin of=/dev/sdb bs=1k seek=33 conv=fsync
+
+
+
+&{/busfreq} {
+   /* Disable busfreq, to avoid 1st Linux busfreq crash other inmates */
+   status = "disabled";
+};
+
+
+u-boot load cmd
+CONFIG_CMD_FS_GENERIC=y
+
+
+make CFLAG=-DDEBUG
+
+iMX8MM u-boot2021.04移植
+https://blog.csdn.net/qq_41256101/article/details/127590200
+
+
+6> make CFLAG=-DDEBUG ATF_LOAD_ADDR=0x920000 flash.bin -j12     // 错误   不能定义DEBUG宏定义
+
+
+
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- imx8mm_topeet_defconfig
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- menuconfig
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- ATF_LOAD_ADDR=0x920000 flash.bin -j12
+
+
+
+sudo dd if=./flash.bin of=/dev/sdb1
+
+=> fastboot usb 0
+$ fastboot flash u-boot ./flash.bin
+
+=> fastboot udp
+Listening for fastboot command on 192.168.3.10
+
+$ fastboot -s udp:192.168.3.10 flash u-boot ./flash.bin
+$ fastboot -s udp:192.168.3.10 flash env ./env.bin
+$ fastboot -s udp:192.168.3.10 flash dtb ./arch/arm64/boot/dts/freescale/imx8mm-ebf-basic.dtb
+$ fastboot -s udp:192.168.3.10 flash image ./arch/arm64/boot/Image
+
+read <interface> <dev[:part]> addr blk# cnt
+mmc read addr blk# cnt
+load <interface> [<dev[:part]> [<addr> [<filename> [bytes [pos]]]]]
+
+load mmc 1:3 0x43000000
+
+read mmc 1:3 0x43000000 0x0 0x1000
+read mmc 1:4 0x40480000 0x0 0x10000
+
+read mmc 1:4 0x40480000 0x0 0x40000
+
+
+mmc read 0x43000000 0x00003000 0x00001000
+mmc read 0x40480000 0x00004000 0x00040000       // 128M error
+
+mmc read 0x40480000 0x00004000 0x00010000       // 32M correct
+
+
+
+setenv bootcmd 'mmc dev 1;read mmc 1:3 0x43000000 0x0 0x1000;read mmc 1:4 0x40480000 0x0 0x10000;booti 0x40480000 - 0x43000000'
+setenv bootcmd 'mmc dev 1;mmc read 0x43000000 0x00003000 0x00001000;mmc read 0x40480000 0x00004000 0x00010000;booti 0x40480000 - 0x43000000'
+
+
+
+mmc read addr blk# cnt
+
+booti 0x40480000 - 0x43000000
+
+
+
+
+load mmc 1:3 0x43000000
+load mmc 1:4 0x40480000
+
+
+$ fastboot -s udp:192.168.3.10 devices
+$ fastboot -s udp:192.168.3.10 getvar all
+$ fastboot -s udp:192.168.5.211 flash rpiboot out/target/product/rpi3/rpiboot.img
+
+
+setenv ipaddr 192.168.3.10
+setenv serverip 92.168.3.2
+setenv netmask 255.255.255.0
+setenv ethaddr 00:a8:44:1f:1f:10
+
+
+First usable LBA: 34
+Last usable LBA: 62333918
+Alternative LBA: 62333951
+Partition entries starting LBA: 2
+Allocated partition entries: 128
+Partition entries ending LBA: 33
+
+Device        Start      End  Sectors Type-UUID                            UUID                                 Name      Attrs
+/dev/sdb1        66     8191     8126 0FC63DAF-8483-4772-8E79-3D69D8477DE4 452F615C-87EC-0F47-B4C8-097171843E4E u-boot    
+/dev/sdb2      8192    12287     4096 0FC63DAF-8483-4772-8E79-3D69D8477DE4 320FACD1-2A15-E149-8E01-FCCE2A2D2E83 env       
+/dev/sdb3     12288    16383     4096 0FC63DAF-8483-4772-8E79-3D69D8477DE4 B5D489A7-ACB0-6442-9936-52A35AA67F24 dtb       
+/dev/sdb4     16384   278527   262144 0FC63DAF-8483-4772-8E79-3D69D8477DE4 CE5E147A-7338-2047-B84D-05884A1DE5FF image    
+/dev/sdb5    278528 17055743 16777216 0FC63DAF-8483-4772-8E79-3D69D8477DE4 945404BA-A212-6848-9A3A-A285189592C9 busybox   
+/dev/sdb6  17055744 62333918 45278175 0FC63DAF-8483-4772-8E79-3D69D8477DE4 5DCDC80B-8E92-5746-A994-6666A3BF394C buildroot 
+
+Expert command (m for help): 
+
+
+
+
+
+3.1 ±àÒëATF
+½øÈëÏÂÔØºÃµÄATFÔ´ÂëÄ¿Â¼£¬Ö´ÐÐÏÂÁÐÃüÁîÍê³É±àÒë¡£
+
+git clone  https://github.com/ARM-software/arm-trusted-firmware.git
+
+
+$ make CROSS_COMPILE=aarch64-linux-gnu- PLAT=imx8mm bl31
+1
+±àÒëÍê³É¿ÉÒÔ¿´µ½ÔÚbuild/imx8mm/releaseÏÂÉú³ÉÁËÎÒÃÇÐèÒªµÄbl31.binÎÄ¼þ£¬½«Õâ¸öÎÄ¼þ¸´ÖÆµ½ubootµÄ±àÒëÄ¿Â¼ÏÂ¡£
+
+
+3.2 ÏÂÔØfirmware-imx
+Ö´ÐÐÏÂÃæÃüÁî£¬ÏÂÔØfirmware-imx£¬»ñÈ¡È¨ÏÞ²¢Ö´ÐÐ»ñÈ¡ËùÐèÎÄ¼þ¡£
+
+$ wget https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-imx-8.9.bin
+$ chmod +x firmware-imx-8.9.bin
+$ ./firmware-imx-8.9.bin
+
+½øÈëfirmware-imx-8.9/firmware/ddr/synopsysÄ¿Â¼£¬½«ddr4_dmem_1d.bin¡¢ddr4_imem_1d.bin¡¢ddr4_dmem_2d.binºÍddr4_imem_2d.binËÄ¸öÎÄ¼þ¸´ÖÆµ½ubootµÄ±àÒëÄ¿Â¼ÏÂ¡£
+
+3.3 ±àÒëuboot
+½øÈëubootÔ´ÂëÄ¿Â¼£¬È·±£±àÒëËùÐèÎÄ¼þ¶¼ÒÑ¸´ÖÆ¡£
+
+Ö´ÐÐÏÂÁÐÃüÁî£¬Íê³É±àÒë¡£
+
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- imx8mm_topeet_defconfig
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- menuconfig
+$ make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- ATF_LOAD_ADDR=0x920000 flash.bin -j12
+
+±àÒëÍê³É£¬Éú³Éflash.binÊÇ´øÓÐIVTµÄ£¬¿ÉÒÔÉÕÐ´¡£
+
+
+3.4 ÏÂÔØÑéÖ¤
+Ê¹ÓÃuuuÆô¶¯uboot£¬½«²¦Âë¿ª¹Ø²¦µ½´®ÐÐÏÂÔØÄ£Ê½£¬Á¬½ÓºÃ´®¿ÚºÍOTG¡£Ö´ÐÐ$ sudo uuu -b emmc flash.binÃüÁî£¬½øÐÐÏÂÔØ¡£(×¢Òâ£ºÏÂÔØµ½SD¿¨Ê¹ÓÃ$ sudo uuu -b sd flash.bin£¬µ«ÊÇCONFIG_SYS_FSL_USDHC_NUMµÃÑ¡ÔñSD¿¨Æô¶¯)
+
+ÏÂÔØÍê³Éºó£¬ÉèÖÃÆô¶¯·½Ê½´ÓEMMCÆô¶¯£¬ÖØÆô¿ª·¢°å¡£
+
+½«ÍøÏßÁ¬½Óµ½Â·ÓÉÆ÷ÉÏ£¬Ö´ÐÐdhcpÃüÁî»ñÈ¡ipµØÖ·£¬²¢ping·þÎñÆ÷²âÊÔÍøÂçÕý³£¡£
+
+
+4. ×Ü½á
+ubootÒÆÖ²Ìí¼ÓÁËºÜ¶à°å¼¶ÎÄ¼þ£¬ÕâÐ©¶¼²»ÊÇÖØÒªµÄ(ÆäËûÐ¾Æ¬¿ÉÄÜÃ»ÓÐÕâÐ©)¡£ÐÞ¸ÄÉè±¸Ê÷ÊÇÒÆÖ²µÄÖØÖÐÖ®ÖØ£¬µ«ÊÇÑ¶Îªi.MX8MM¿ª·¢°åºÍ¹Ù·½EVK¿ª·¢°å±È½Ï½Ó½ü£¬ËùÒÔÐÞ¸Ä±È½Ï¼òµ¥¡£±¾ÎÄ½ö¹©Ñ§Ï°²Î¿¼£¬ÈçÓÐÎÊÌâ»¶Ó­Ö¸Õý¡£
