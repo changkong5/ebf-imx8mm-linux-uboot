@@ -51,6 +51,12 @@ fit-dtb.blob*
 !.gitignore
 !.mailmap
 
+!bl31.bin
+!ddr4_dmem_1d.bin
+!ddr4_dmem_2d.bin
+!ddr4_imem_1d.bin
+!ddr4_imem_2d.bin
+
 #
 # Generated files
 #
